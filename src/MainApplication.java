@@ -1,9 +1,6 @@
-import java.util.*;
-
-import java.io.File; // Import the File class
-import java.io.FileNotFoundException; // Import this class to handle errors
-import java.io.FileWriter;
-import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Scanner;
 
 public class MainApplication {
 	public static void main(String[] args) {
@@ -14,38 +11,39 @@ public class MainApplication {
 
 class TheTable {
 
-	// CardDeck deck = new CardDeck();
-	
+	public static ArrayList<Card> _discardedCards = new ArrayList<>();
+
 	public static void PlayCards() {
 		CardDeck.GenerateCardDeck();
 		// I now have a card deck
 
 		GamePlayers p = new GamePlayers();
-		p.GeneratePlayers();
+		GamePlayers.GeneratePlayers();
 		// I now have Card Players with Hands of Cards: use the Debugger to verify that you can see this
-		
+
 		// my Players have a calcuatel card value Method
-		
+
 		// your To Do: For Assignment 8: Is to out WHO the winner player is, based on the cards
 		// that the Dealer gave them
-		// We will look at additional code formulations later to see how to take and give new cards 
+		// We will look at additional code formulations later to see how to take and give new cards
 		// in additional rounds of Play
-		Round round_1 = new Round();
-		round_1.EvaluateHand(p);
-		round_1.CardExchange(p);
-		
+		Round round_1 = new Round(p);
+		round_1.EvaluateHand();
+		System.out.println("VIEW CARDS");
+		round_1.CardExchange();
+//		System.out.println("\n\nCards left in the deck: " + CardDeck._cardDeck.size() + "\t " + CardDeck._cardDeck );;
+
+		System.out.println("\n\nLET'S FIND OUT WHO WON\n");
 		DeclareWinner(p);
-		
+
 	}
-	
+
 	public static void DeclareWinner(GamePlayers p) {
 		int highestValue = 0;
 		Player winner = null;
-		System.out.println("\n\ncards left: " + CardDeck._cardDeck.size() + "\t " + CardDeck._cardDeck + "\n\n");;
-		for (var i = 0; i < p.players.size(); i ++) {
-			int HandValue = p.players.get(i).CalculateHandValue();
-			Player playerName =  p.players.get(i);
-			System.out.println(playerName.PlayerName + " and their hand value: " +  HandValue);
+		for (Player playerName : GamePlayers.players) {
+			int HandValue = playerName.CalculateHandValue();
+			//			System.out.println(playerName.PlayerName + " and their hand value: " +  HandValue);
 			if (highestValue == 0 || highestValue < HandValue ) {
 				highestValue = HandValue;
 				winner = playerName;
@@ -56,7 +54,7 @@ class TheTable {
 }
 
 class CardDeck {
-	public static ArrayList<Card> _cardDeck = new ArrayList<Card>();
+	public static ArrayList<Card> _cardDeck = new ArrayList<>();
 	static String[] suites = { "Clubs", "Diamonds", "Hearts", "Spades" };
 
 	public static void GenerateCardDeck() {
@@ -83,9 +81,9 @@ class CardDeck {
 		cardValue[11] = 13;
 		cardValue[12] = 14;
 
-		for (int i = 0; i < suites.length; i++) {
-			for (int j = 0; j < cardValue.length; j++) {
-				CardDeck._cardDeck.add(new Card(suites[i], cardValue[j]));
+		for (String suite : suites) {
+			for (int element : cardValue) {
+				CardDeck._cardDeck.add(new Card(suite, element));
 			}
 		}
 
@@ -97,8 +95,9 @@ class CardDeck {
 class Card {
 
 	private String suite;
-	private int suitevalue; 
-	private int cardvalue;
+	private int suitevalue; // total points based on suite and card value.
+							// Example Diamonds with 2 as multiplier. Diamond 3 is worth 6 points
+	private int cardvalue; // or just the card numbers 2-14
 	// #TODO: Add to the this Class a VALUE Data Attribute
 	// set the VALUE of this Card based on Suite and Card Value
 
@@ -107,8 +106,9 @@ class Card {
 		this.cardvalue = _cardvalue;
 		calculateSuiteValue(this.suite);
 	}
-	
+
 	private void calculateSuiteValue(String _suite) {
+		// this sets the overall value of each card based on suite
 		if (_suite.equals("Clubs")) {
 			this.suitevalue = this.cardvalue  * 1; // multiplier based on suite
 		} else if (_suite.equals("Diamonds")) {
@@ -118,22 +118,21 @@ class Card {
 		} else {
 			this.suitevalue  = this.cardvalue * 4;
 		}
-		System.out.println("this.cardvalue: " + this + "\t this.suitevalue: " + this.suitevalue + "\n");
-		
-	} 
-	
+	}
+
 	public int getCardValue() {
 		return this.cardvalue;
-	} 
-	
+	}
+
 	public int getSuiteValue() {
 		return this.suitevalue;
-	} 
-	
+	}
+
 	public String getCardSuite() {
 		return this.suite;
-	} 
+	}
 
+	@Override
 	public String toString() {
 		return this.suite + " " + this.cardvalue;
 	}
@@ -145,7 +144,7 @@ class GamePlayers {
 
 	}
 
-	public static ArrayList<Player> players = new ArrayList<Player>();
+	public static ArrayList<Player> players = new ArrayList<>();
 
 	public static void GeneratePlayers() {
 		// for (int m = 0; m < 4; m++) {
@@ -166,45 +165,55 @@ class Player {
 	}
 
 	String PlayerName;
-	Hand setOfCards;
-	Card[] playersCardSet = new Card[5];
-	
+	Hand setOfCards; // Hand object
+	ArrayList<Card> playersCardSet = new ArrayList<Card>();
+
 	public int CalculateHandValue() {
 		int HandValue = 0; // always reset to 0
-		for (var i = 0; i < playersCardSet.length; i++) {
-			int suiteValue = playersCardSet[i].getSuiteValue();
+		System.out.println("Calculate card value of " + this.PlayerName);
+		for (Card element : playersCardSet) {
+			int suiteValue = element.getSuiteValue();
 			HandValue +=	suiteValue;
-			System.out.print(playersCardSet[i].toString() + ", with suiteValue: " + suiteValue + "\n" );
+			System.out.println(element.toString() + ", with suiteValue: " + suiteValue );
 		}
-		System.out.println("\nCalculateHandValue: "+ HandValue );
+
+		System.out.println(this.PlayerName + " has " + HandValue + " points.\n\n");
 		return HandValue;
 	}
-	
-	public void setHand() {  // issueHand() instead of during player creation
-		playersCardSet = setOfCards.IssueHand();
+
+	public void setHand() {  // issueHand() method separately during each round instead of during player creation
+		playersCardSet = setOfCards.IssueHand(); // copies reference to the list PlayersHand cards from Hand object
 	}
-	
+
+	public void ViewCards() {
+		for (Card element : playersCardSet) {
+			System.out.print(element + " \t ");
+		}
+		System.out.println();
+	}
+
 	public void returnCards() {
-		
+
 	}
 }
 
 class Hand {
 	// the Hand is the cards the player holds
 
-	Card[] PlayersHand = new Card[5];
+	ArrayList<Card> PlayersHand = new ArrayList<Card>(); // will be copied by player object
 
 	public Hand() {
 
 	}
 
-	public Card[] IssueHand() {
+	public ArrayList<Card> IssueHand() {
 		for (int j = 0; j < 5; j++) {
-			PlayersHand[j] = (CardDeck._cardDeck).remove(j); 
+			PlayersHand.add((CardDeck._cardDeck).remove(j));
 			// used .remove() instead of .get() so that the cards in the player's hand are not in the deck
 			// and no duplicates will occur
 		}
-		return PlayersHand;
+		System.out.println("Cards issued to player");
+		return PlayersHand; // returned to player object
 	}
 
 }
@@ -212,28 +221,59 @@ class Hand {
 class Round{
 	int roundNumber=0;
 	private int highestScore ;
-	ArrayList<Player> RoundWinners; // 
-	
-	
-	public Round() {
+	ArrayList<Player> RoundWinners; //
+	Scanner keyboard = new Scanner(System.in);
+
+	public Round(GamePlayers p) {
 		this.roundNumber++;
 	}
-	
-	public void EvaluateHand(GamePlayers p) {
-		System.out.println("Round #" + this.roundNumber);
-		for (var i = 0; i < p.players.size(); i ++) {
-			p.players.get(i).setHand();
-			int playerHandValue = p.players.get(i).CalculateHandValue();
-			String playerName =  p.players.get(i).PlayerName;
-			System.out.println(playerName + " has " + playerHandValue + " points.\n\n");
+
+	public void EvaluateHand() {
+		System.out.println("\nRound #" + this.roundNumber);
+		for (Player element : GamePlayers.players) {
+			String playerName =  element.PlayerName;
+			System.out.println("Issue cards to player " + playerName);
+			element.setHand(); // Cards issued to player; pre-requisite to calculating hand value
+//			int playerHandValue =
+			element.CalculateHandValue();
 		}
+//		System.out.println();
 	}
-	
-	public void CardExchange(GamePlayers p) {
-		/* In each round: Player may give 1, 2, or 3 cards  back to the Table (dealer) : and receive back an equivalent 
+
+	public void CardExchange() {
+		/* In each round: Player may give 1, 2, or 3 cards  back to the Table (dealer) : and receive back an equivalent
 		 * number of cards
 		*/
-		
-		
+		System.out.println("\nGive cards and get the same number of cards in return");
+
+		for (var i = 0 ; i < GamePlayers.players.size(); i++ ) {
+			System.out.println("\n\nView cards of " + GamePlayers.players.get(i).PlayerName );
+
+			GamePlayers.players.get(i).ViewCards();
+			System.out.println("Return cards, " + i);
+			this.ReturnCardsConfirmation(GamePlayers.players.get(i));
+		}
+	}
+
+	public void ReturnCardsConfirmation(Player p) {
+		String response; // this.cardsToSurrender.nextLine();
+		ArrayList<Card> player_cards = p.playersCardSet;
+		System.out.println("ReturnCardsConfirmation");
+		var i = 0 ;
+		while ( 0 < player_cards.size() ) {
+			int index = player_cards.size()-(1+i);
+			System.out.println("player_cards.size(): " + player_cards.size() + " i is " + i);
+			System.out.println("Do you want to return this card? "+ player_cards.get(index));
+			System.out.print("Type 'yes' to confirm, any other key to keep card: ");
+			response = this.keyboard.nextLine();
+			if (response.equals("yes")) {
+				TheTable._discardedCards.add(player_cards.remove(index)); // removed from hand, returned to table
+			} else {
+				System.out.println("Keeping card "+ player_cards.get(index));
+//				continue;
+			}
+			i++ ;
+			if (player_cards.size() < i) { break;}
+		}
 	}
 }

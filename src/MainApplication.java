@@ -260,8 +260,8 @@ class Round{
 		ArrayList<Card> player_cards = p.playersCardSet;
 		System.out.println("ReturnCardsConfirmation");
 		
-		for (var i = player_cards.size()-1 ; 0 < player_cards.size()-3;  i-- ) {
-//			int index = player_cards.size()-1;
+		for (var i = player_cards.size()-1 ; 3 <= player_cards.size();  i-- ) {
+			if (i < 0 ) { break;}
 			System.out.println("player_cards.size(): " + player_cards.size() + " i is " + i);
 			System.out.println("Do you want to return this card? "+ player_cards.get(i));
 			System.out.print("Type 'yes' to confirm, any other key to keep card: ");
@@ -272,8 +272,6 @@ class Round{
 				System.out.println("Keeping card "+ player_cards.get(i));
 				continue;
 			}
-//			i++ ;
-//			if (player_cards.size() < i) { break;}
 		}
 	}
 }

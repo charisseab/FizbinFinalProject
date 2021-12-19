@@ -259,21 +259,21 @@ class Round{
 		String response; // this.cardsToSurrender.nextLine();
 		ArrayList<Card> player_cards = p.playersCardSet;
 		System.out.println("ReturnCardsConfirmation");
-		var i = 0 ;
-		while ( 0 < player_cards.size() ) {
-			int index = player_cards.size()-(1+i);
+		
+		for (var i = player_cards.size()-1 ; 0 < player_cards.size()-3;  i-- ) {
+//			int index = player_cards.size()-1;
 			System.out.println("player_cards.size(): " + player_cards.size() + " i is " + i);
-			System.out.println("Do you want to return this card? "+ player_cards.get(index));
+			System.out.println("Do you want to return this card? "+ player_cards.get(i));
 			System.out.print("Type 'yes' to confirm, any other key to keep card: ");
 			response = this.keyboard.nextLine();
 			if (response.equals("yes")) {
-				TheTable._discardedCards.add(player_cards.remove(index)); // removed from hand, returned to table
+				TheTable._discardedCards.add(player_cards.remove(i)); // removed from hand, returned to table
 			} else {
-				System.out.println("Keeping card "+ player_cards.get(index));
-//				continue;
+				System.out.println("Keeping card "+ player_cards.get(i));
+				continue;
 			}
-			i++ ;
-			if (player_cards.size() < i) { break;}
+//			i++ ;
+//			if (player_cards.size() < i) { break;}
 		}
 	}
 }

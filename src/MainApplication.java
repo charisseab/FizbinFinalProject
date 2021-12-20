@@ -26,21 +26,23 @@ class TheTable {
 	}
 
 	public static void PlayCards() {
+
+		System.out.println("Decide whether to keep on return cards. Get the highest hand value to WIN!\n");
+		
 		CardDeck.GenerateCardDeck();
 		// I now have a card deck
 
 		GamePlayers p = new GamePlayers();
 		GamePlayers.GeneratePlayers();
 		// I now have Card Players with Hands of Cards: use the Debugger to verify that you can see this
-
 		// my Players have a calcuatel card value Method
 		
 		TheTable.createRounds();
-		
+
 		for(int i=0; i<TheTable.rounds.length; i++) {
 			System.out.println("\nROUND " + (i+1) );
 			rounds[i].cardExchange();
-			System.out.println("\nROUND " + (i+1) + "FINISHED");
+			System.out.println("ROUND " + (i+1) + " FINISHED");
 		}
 
 

@@ -264,8 +264,6 @@ class Hand {
 
 class Round{
 	public static int roundNumber=0;
-	private int highestScore ;
-	ArrayList<Player> RoundWinners; //
 	public static int returnedCards = 0;
 
 	public Round() {

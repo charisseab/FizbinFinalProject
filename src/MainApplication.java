@@ -1,6 +1,9 @@
+
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Scanner;
+import java.util.HashMap;
 
 public class MainApplication {
 	public static void main(String[] args) {
@@ -12,6 +15,15 @@ public class MainApplication {
 class TheTable {
 
 	public static ArrayList<Card> _discardedCards = new ArrayList<>();
+	public static Round[] rounds = new Round[3];
+	
+	public static void createRounds() {
+		Round temp = null;
+		for(int i=0; i<3; i++) {
+			temp = new Round();
+			rounds[i] = temp;
+		}
+	}
 
 	public static void PlayCards() {
 		CardDeck.GenerateCardDeck();
@@ -22,16 +34,15 @@ class TheTable {
 		// I now have Card Players with Hands of Cards: use the Debugger to verify that you can see this
 
 		// my Players have a calcuatel card value Method
+		
+		TheTable.createRounds();
+		
+		for(int i=0; i<TheTable.rounds.length; i++) {
+			System.out.println("\nROUND " + (i+1) );
+			rounds[i].cardExchange();
+			System.out.println("\nROUND " + (i+1) + "FINISHED");
+		}
 
-		// your To Do: For Assignment 8: Is to out WHO the winner player is, based on the cards
-		// that the Dealer gave them
-		// We will look at additional code formulations later to see how to take and give new cards
-		// in additional rounds of Play
-		Round round_1 = new Round(p);
-		round_1.EvaluateHand();
-		System.out.println("VIEW CARDS");
-		round_1.CardExchange();
-//		System.out.println("\n\nCards left in the deck: " + CardDeck._cardDeck.size() + "\t " + CardDeck._cardDeck );;
 
 		System.out.println("\n\nLET'S FIND OUT WHO WON\n");
 		DeclareWinner(p);
@@ -42,14 +53,13 @@ class TheTable {
 		int highestValue = 0;
 		Player winner = null;
 		for (Player playerName : GamePlayers.players) {
-			int HandValue = playerName.CalculateHandValue();
-			//			System.out.println(playerName.PlayerName + " and their hand value: " +  HandValue);
-			if (highestValue == 0 || highestValue < HandValue ) {
-				highestValue = HandValue;
+			int playerScore = playerName.getTotalHandValue();
+			if (highestValue == 0 || highestValue < playerScore ) {
+				highestValue = playerScore;
 				winner = playerName;
 			}
 		}
-		System.out.println("\n\nThe winner is " + winner.PlayerName + " with a winning hand value of " + highestValue );
+		System.out.println("\n\nThe winner is " + winner.PlayerName + " with a TOTAL winning hand value of " + highestValue );
 	}
 }
 
@@ -98,8 +108,7 @@ class Card {
 	private int suitevalue; // total points based on suite and card value.
 							// Example Diamonds with 2 as multiplier. Diamond 3 is worth 6 points
 	private int cardvalue; // or just the card numbers 2-14
-	// #TODO: Add to the this Class a VALUE Data Attribute
-	// set the VALUE of this Card based on Suite and Card Value
+
 
 	public Card(String _suite, int _cardvalue) {
 		this.suite = _suite;
@@ -147,20 +156,22 @@ class GamePlayers {
 	public static ArrayList<Player> players = new ArrayList<>();
 
 	public static void GeneratePlayers() {
-		// for (int m = 0; m < 4; m++) {
-			players.add(new Player("Bill"));
-			players.add(new Player("Mary"));
-			players.add(new Player("Steve"));
-			players.add(new Player("Susan"));
-		//} // removed, otherwise, each player is present 4 times resulting in 16 number of players
+		players.add(new Player("Bill"));
+		players.add(new Player("Mary"));
+		players.add(new Player("Steve"));
+		players.add(new Player("Susan"));
 	}
 
 }
 
 class Player {
+	Scanner keyboard = new Scanner(System.in);
+	int score;
 	public Player(String playerName) {
 		PlayerName = playerName;
 		setOfCards = new Hand();
+		this.setHand();
+		this.score = 0;
 //		playersCardSet = setOfCards.IssueHand();
 	}
 
@@ -178,13 +189,19 @@ class Player {
 		}
 
 		System.out.println(this.PlayerName + " has " + HandValue + " points.\n\n");
+		this.score += HandValue; // for each round, update player score
 		return HandValue;
 	}
 
 	public void setHand() {  // issueHand() method separately during each round instead of during player creation
 		playersCardSet = setOfCards.IssueHand(); // copies reference to the list PlayersHand cards from Hand object
+		System.out.println("Cards issued to player " + this.PlayerName);
 	}
 
+	public int getTotalHandValue() {
+		return this.score;
+	}
+	
 	public void ViewCards() {
 		for (Card element : playersCardSet) {
 			System.out.print(element + " \t ");
@@ -192,8 +209,34 @@ class Player {
 		System.out.println();
 	}
 
-	public void returnCards() {
 
+	public void returnCardsConfirmation() {
+		String response; // this.cardsToSurrender.nextLine();
+
+		System.out.println("ReturnCardsConfirmation");
+		
+		for (int i = this.playersCardSet.size()-1 ; 3 <= this.playersCardSet.size();  i-- ) {
+			if (i < 0 ) { break;}
+			System.out.println("Do you want to return this card? "+ this.playersCardSet.get(i));
+			System.out.print("Type 'yes' to RETURN a card, or any other key to keep card: ");
+			response = this.keyboard.nextLine();
+			if (response.equals("yes")) {
+				Card card_to_remove = this.playersCardSet.remove(i);
+				TheTable._discardedCards.add(card_to_remove); // removed from hand, returned to table
+				Round.returnedCards ++ ;
+				System.out.println("Card " + card_to_remove +  " removed. Returned cards: " + Round.returnedCards);
+			} else {
+				System.out.println("Keeping card "+ this.playersCardSet.get(i));
+				continue;
+			}
+		}
+	}
+	
+	public void recieveNewCards() {
+		System.out.println("recieveNewCards equivalent to Returned cards: " + Round.returnedCards);
+		for (int i = 0; i < Round.returnedCards ; i++ ) {
+			this.playersCardSet.add(CardDeck._cardDeck.remove(0));
+		}
 	}
 }
 
@@ -212,66 +255,43 @@ class Hand {
 			// used .remove() instead of .get() so that the cards in the player's hand are not in the deck
 			// and no duplicates will occur
 		}
-		System.out.println("Cards issued to player");
 		return PlayersHand; // returned to player object
 	}
 
 }
 
 class Round{
-	int roundNumber=0;
+	public static int roundNumber=0;
 	private int highestScore ;
 	ArrayList<Player> RoundWinners; //
-	Scanner keyboard = new Scanner(System.in);
+	public static int returnedCards = 0;
 
-	public Round(GamePlayers p) {
-		this.roundNumber++;
+	public Round() {
+		roundNumber++;
 	}
 
-	public void EvaluateHand() {
-		System.out.println("\nRound #" + this.roundNumber);
-		for (Player element : GamePlayers.players) {
-			String playerName =  element.PlayerName;
-			System.out.println("Issue cards to player " + playerName);
-			element.setHand(); // Cards issued to player; pre-requisite to calculating hand value
-//			int playerHandValue =
-			element.CalculateHandValue();
-		}
-//		System.out.println();
-	}
+	
 
-	public void CardExchange() {
+	public void cardExchange() {
 		/* In each round: Player may give 1, 2, or 3 cards  back to the Table (dealer) : and receive back an equivalent
 		 * number of cards
 		*/
 		System.out.println("\nGive cards and get the same number of cards in return");
 
 		for (var i = 0 ; i < GamePlayers.players.size(); i++ ) {
+			returnedCards = 0;
 			System.out.println("\n\nView cards of " + GamePlayers.players.get(i).PlayerName );
 
-			GamePlayers.players.get(i).ViewCards();
 			System.out.println("Return cards, " + i);
-			this.ReturnCardsConfirmation(GamePlayers.players.get(i));
+			GamePlayers.players.get(i).ViewCards();
+			GamePlayers.players.get(i).returnCardsConfirmation();
+			System.out.println("\n\nEvaluate AFTER returnCardsConfirmation:");
+			GamePlayers.players.get(i).ViewCards();
+			GamePlayers.players.get(i).recieveNewCards();
+			System.out.println("\n\nEvaluate AFTER recieveNewCards");
+			GamePlayers.players.get(i).ViewCards();
+			GamePlayers.players.get(i).CalculateHandValue(); // calculate at the very end of the round;
 		}
 	}
 
-	public void ReturnCardsConfirmation(Player p) {
-		String response; // this.cardsToSurrender.nextLine();
-		ArrayList<Card> player_cards = p.playersCardSet;
-		System.out.println("ReturnCardsConfirmation");
-		
-		for (var i = player_cards.size()-1 ; 3 <= player_cards.size();  i-- ) {
-			if (i < 0 ) { break;}
-			System.out.println("player_cards.size(): " + player_cards.size() + " i is " + i);
-			System.out.println("Do you want to return this card? "+ player_cards.get(i));
-			System.out.print("Type 'yes' to confirm, any other key to keep card: ");
-			response = this.keyboard.nextLine();
-			if (response.equals("yes")) {
-				TheTable._discardedCards.add(player_cards.remove(i)); // removed from hand, returned to table
-			} else {
-				System.out.println("Keeping card "+ player_cards.get(i));
-				continue;
-			}
-		}
-	}
 }
